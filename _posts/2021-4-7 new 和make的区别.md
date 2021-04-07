@@ -1,8 +1,8 @@
 ---
 layout: post
-title: new 和make的区别
+title: Go new 和map的区别
 categories: golang
-description: new 和make的区别
+description: Go new 和map的区别
 keywords: golang new make
 ---
 
