@@ -8,87 +8,50 @@ keywords: golang new make
 
 ## 1
 
+对于引用类型变量，不光要声明，同时也需要为他分配内存空间。
+
+对于值类型的，则不需要，默认分配好了。
 
 
-channe源码位于`runtime`中`的chan.go` 源码如下：
 
-```go
-type hchan struct {
-	qcount   uint           // channel中元素的个数
-	dataqsiz uint           // 底层循数组的长度
-	buf      unsafe.Pointer // 指向底层循环数组的指针，而且只针对有缓冲的channel
-	elemsize uint16   //channel中元素大小
-	closed   uint32  // channel是否被关闭的标志
-	elemtype *_type // channel中元素类型
-	sendx    uint   // channel的发送操作处理到的位置
-	recvx    uint   // channel的接受操作处理到的位置
-	recvq    waitq  // 等待接受groutine队列
-	sendq    waitq  // 等待发送的groutine队列
-	lock mutex
-}
+
+
+### new
+
+
+
+```golang
+// The new built-in function allocates memory. The first argument is a type,
+// not a value, and the value returned is a pointer to a newly
+// allocated zero value of that type.
+func new(Type) *Type
 ```
 
-其中，`recvq`，`sendq` 存储了当前的channel由于缓冲区不足而阻塞的`groutine`，这些等待的队列使用双向链表 [`runtime.waitq`](https://draveness.me/golang/tree/runtime.waitq) 表示，链表中所有的元素都是 [`runtime.sudog`](https://draveness.me/golang/tree/runtime.sudog) 结构.
 
-```go
-type waitq struct {
-	first *sudog
-	last  *sudog
-}
+
+只接受一个参数，这个参数是一个类型，new(T) 为一个 T 类型新值分配空间并将此空间初始化为 T 的零值，返回的是新值的地址，也就是 T 类型的指针 *T，该指针指向 T 的新分配的零值。
+
+### make
+
+
+
+make也是用于内存的分配，只用于chan ,map,以及切片的内存创建。返回的类型就是这三个类型的本身。而不是他们的指针类型，因为这三种类型就是引用类型。
+
+```golang
+ slice, map, or chan (only)
 ```
 
-[`runtime.sudog`](https://draveness.me/golang/tree/runtime.sudog) 表示一个在等待列表中的 `Goroutine`，该结构中存储了两个分别指向前后 [`runtime.sudog`](https://draveness.me/golang/tree/runtime.sudog) 的指针以构成链表。
+### 联系
 
-`lock` 用来保证每个读 channel 或写 channel 的操作都是原子的。
+二者都是内存的分配（堆上），但是`make`只用于slice、map以及channel的初始化（非零值）；而`new`用于类型的内存分配，并且内存置为零。所以在我们编写程序的时候，就可以根据自己的需要很好的选择了。
 
-```go
-func makechan(t *chantype, size int) *hchan {
-	elem := t.elem
+`make`返回的还是这三个引用类型本身；而`new`返回的是指向类型的指针。
 
-	// compiler checks this but be safe.
-	if elem.size >= 1<<16 {
-		throw("makechan: invalid channel element type")
-	}
-	if hchanSize%maxAlign != 0 || elem.align > maxAlign {
-		throw("makechan: bad alignment")
-	}
 
-	mem, overflow := math.MulUintptr(elem.size, uintptr(size))
-	if overflow || mem > maxAlloc-hchanSize || size < 0 {
-		panic(plainError("makechan: size out of range"))
-	}
 
-	// Hchan does not contain pointers interesting for GC when elements stored in buf do not contain pointers.
-	// buf points into the same allocation, elemtype is persistent.
-	// SudoG's are referenced from their owning thread so they can't be collected.
-	// TODO(dvyukov,rlh): Rethink when collector can move allocated objects.
-	var c *hchan
-	switch {
-	case mem == 0:
-		// Queue or element size is zero.
-		c = (*hchan)(mallocgc(hchanSize, nil, true))
-		// Race detector uses this location for synchronization.
-		c.buf = c.raceaddr()
-	case elem.ptrdata == 0:
-		// Elements do not contain pointers.
-		// Allocate hchan and buf in one call.
-		c = (*hchan)(mallocgc(hchanSize+mem, nil, true))
-		c.buf = add(unsafe.Pointer(c), hchanSize)
-	default:
-		// Elements contain pointers.
-		c = new(hchan)
-		c.buf = mallocgc(mem, elem, true)
-	}
 
-	c.elemsize = uint16(elem.size)
-	c.elemtype = elem
-	c.dataqsiz = uint(size)
-	lockInit(&c.lock, lockRankHchan)
 
-	if debugChan {
-		print("makechan: chan=", c, "; elemsize=", elem.size, "; dataqsiz=", size, "\n")
-	}
-	return c
-}
-```
+
+
+
 
