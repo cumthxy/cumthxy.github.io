@@ -1,0 +1,48 @@
+<footer>
+  <div class="body">
+    <div class="footer-author">
+      <a href="/about">
+        <picture>
+          <source srcset="/about/matthias-endler-2x.avif" type="image/avif">
+          <img 
+            src="/about/matthias-endler-2x.jpg" 
+            alt="Matthias Endler" 
+            class="footer-author-photo"
+            width="80" 
+            height="80">
+        </picture>
+      </a>
+      <div class="footer-author-text">
+        <span class="greeting">Servus</span>, I'm <a href="/about">Matthias</a>.
+      </div>
+    </div>
+    
+    <div>
+      <p>
+        A developer from Bavaria, Germany 🥨🍺, mostly writing about software development and open-source.
+      </p>
+      
+      <p>
+        My company <a href="https://corrode.dev">corrode</a> offers friendly, human Rust consulting and training for teams going from prototype to production.
+      </p>
+      
+      <p>
+        Browse my <a href="/archive">blog archive</a>, subscribe to my <a href="/rss.xml">RSS feed</a>, or learn more <a href="/about">about me</a>.
+      </p>
+
+      {% include "snippets/social.html" %}
+    </div>
+  </div>
+  <script>
+    // Switch the greeting between a few possible options on dom loaded
+    document.addEventListener("DOMContentLoaded", function () {
+      // A few not-so-common greetings:
+      const greetings = ["Servus", "Aloha", "Howdy", "Ahoi", "Ohai", "Yo"];
+      const greetingElement = document.querySelector(".greeting");
+      if (greetingElement) {
+        greetingElement.textContent =
+          greetings[Math.floor(Math.random() * greetings.length)];
+      }
+    });
+  </script>
+</footer>

@@ -1,0 +1,37 @@
+{% set home = load_data(path="static/icons/home.svg") %}
+{% set github = load_data(path="static/icons/github.svg") %}
+{% set twitter = load_data(path="static/icons/twitter.svg") %}
+{% set mastodon = load_data(path="static/icons/mastodon.svg") %}
+{% set rss = load_data(path="static/icons/rss.svg") %}
+{% set search = load_data(path="static/icons/search.svg") %}
+
+<nav class="social-icons">
+    <ul>
+        <li>
+            <a class="icon" href="/" title="Go to homepage" aria-label="Go to homepage">
+                {{ home | safe }}
+            </a>
+        </li>
+        <li>
+            <a class="icon" href="https://github.com/mre" title="Github" aria-label="Github">
+                {{ github | safe }}
+            </a>
+        </li>
+        <li>
+            <a class="icon" href="https://mastodon.social/@mre" title="Mastodon"
+                aria-label="Mastodon">
+                {{ mastodon | safe }}
+            </a>
+        </li>
+        <li>
+            <a class="icon" href="https://twitter.com/matthiasendler" title="Twitter"
+                aria-label="Twitter">
+                {{ twitter | safe }}
+            </a>
+        </li>
+        <li>
+            <a class="icon" href="/rss.xml" title="RSS feed"
+                aria-label="RSS feed">{{ rss | safe }}</a>
+        </li>
+    </ul>
+</nav>

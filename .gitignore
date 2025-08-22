@@ -1,0 +1,9 @@
+.DS_Store
+public/
+TODO.md
+static/package.json
+static/2019
+static/static
+.vscode
+drafts
+ideas.md

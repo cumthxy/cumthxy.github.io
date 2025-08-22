@@ -1,0 +1,5 @@
+name = "endler-dev"
+compatibility_date = "2025-01-01"
+
+[build]
+upload = { dir = "./public" }

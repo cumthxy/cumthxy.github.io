@@ -1,0 +1,168 @@
+## Go and Rust at the system interface
+
+If rust is complicated, it's only because the world is complicated.
+
+The real world is a dangerous place.
+unsafe so any interaction with the real world must be unsafe. For example, calls
+to C libraries and calls to syscalls in the operating system (filesystems,
+networking, general I/O) are two examples.
+
+Everyone is talking about Go vs Rust.
+Heck, even I wrote an article about it once, that I don't necessarily agree with anymore.
+I since learned that comparing Go with Rust is the wrong approach.
+
+When talking about Go, people often claim that it is simple.
+Others criticize Go for selling ...
+I'd say both camps are missing the point.
+Go is rather a pragmatic language. It is not unaware of the fact that its assumptions are incorrect around edge-cases.
+Rather, it's okay with that and sees it as a tradeoff between productivity and maintenance costs.
+
+Golang has a batteries included approach.
+Its standard library ships with http support but also other functionality like crypto or even smtp support.
+As a result, it is ideal when reaching for something quick and easy with minimal external dependencies.
+
+Rust's has a very limited standard library by design.
+Removing code from the standard library is extremely difficult and even deprecated code still gets used
+by downstream applications.
+Also, things that are popular today might not be used in the future.
+Golang has smtp support in their standard library, but this is not something that necessarily gets used a lot.
+Similarly, Rust does not ship with any cryptography code while Go does.
+Therefore the out-of-the-box experience is not that great, but 
+you can just pick the crates that match your requirements to give you exactly what you want.
+
+
+But rarely anyone is talking about Go AND Rust. As in: a team
+Rust and Go is like Batman and Robin.
+Go is this amazing sidekick
+
+
+I won't touch on the lack of generics or the cumbersome error handling in Go.
+Nor will I focus on Rust's "weird" syntax.
+These are all superficial issues. 
+
+
+
+## Different philosophies
+
+This becomes apparent when working on the boundary to the outside world, the system, the os.
+
+Simple example: How to get the extension of a file in Go?
+
+https://ispycode.com/GO/Path-and-Filepath/Get-file-name-extension-used-by-path
+
+```
+package main
+ 
+import (
+   "fmt"
+   "path/filepath"
+)
+ 
+func main() {
+   extension := filepath.Ext("/tmp/hello.go")
+   fmt.Println("Extension 1:", extension)
+ 
+   extension = filepath.Ext("./hello.jpg")
+   fmt.Println("Extension 2:", extension)
+}
+ 
+
+Output:
+
+$ go run example.go
+Extension 1: .go
+Extension 2: .jpg
+```
+
+Straightforward, simple, and wrong.
+It will work 99% of the time,
+but what if the file does not have an extension?
+What if the file is not even a string?
+
+In Rust, you have to deal with the fallability of operations.
+
+
+
+Another example: empty paths
+
+Given a path, should there be a method to check if it is empty?
+What is even considered an empty path? Is `/` empty?
+https://github.com/rust-lang/rust/issues/3420
+This approach is deeply rooted in Rust's core believes.
+TODO: how does golang handle that?
+
+
+```go
+token := os.Getenv("HOME")
+```
+
+token can be empty..
+can lead to dangerous situations
+(rm -rf / instead of rm -rf /\${HOME})
+
+```rust
+use std::env;
+
+let key = "HOME";
+match env::var(key) {
+    Ok(val) => println!("{}: {:?}", key, val),
+    Err(e) => println!("couldn't interpret {}: {}", key, e),
+}
+```
+
+https://doc.rust-lang.org/std/env/fn.var.html
+
+It's a bit like shell-scripting in that regard: incredibly powerful and convenient
+when it works, extremely dangerous when it doesn't.
+Pick your poison.
+
+Rust does not trust input from the outside by default; Go does.
+
+## Joining/Concatenating paths
+
+ Path::join should concat paths even if the second path is absolute #16507 
+
+ Path::join vs 
+
+https://github.com/rust-lang/rust/issues/16507
+
+I agree with @aturon. The only sensible operation when joining an absolute path
+onto some other path is to get the absolute path back. Doing anything else is
+just weird, and only makes sense if you actually think of paths as strings,
+where "join" is "append, then normalize". I do not understand why Go's path.Join
+behaves in this way, although they are actually taking strings as arguments.
+
+
+## How to get a Path from a file?
+
+Not all files have paths and the path with which the file was opened isn't even guaranteed to still be valid.
+
+
+https://www.reddit.com/r/rust/comments/4sthxj/how_to_get_path_from_file/
+
+Go doesn't care!
+
+https://gobyexample.com/file-paths
+
+It's not that Go is unaware of these limitations.
+Rather, it errs on the side of pragmatism at the cost of being incorrect when handling edge-cases in such situations.
+This is neither good nor bad. It is a trade-off between correctness and ergonomics.
+"Worse is better" is the mantra
+
+
+
+---
+
+
+https://twitter.com/vamchale/status/1421914688271622144/photo/1
+
+strings
+&str, String and &'static str are different types of UTF-8; &str is borrowed UTF-8, String is an owned UTF-8 buffer which you can mutate and &'static str is generally a UTF-8 string literal (and it is a specific kind of &str where the owner is the program itself).
+&[u8], &[u8; N] and Vec<u8> store raw bytes. &[u8] is a borrowed sequence of an arbitrary number of bytes, Vec<u8> is the owned mutable buffer equivalent (like String) and &[u8; N] stores precisely N bytes (e.g. &[u8; 5] stores 5 bytes).
+OsStr/OsString are the borrowed and owned types for what the OS thinks is a string: arbitrary bytes on Unix and WTF-8 on Windows. It is more relaxed than str/String but less relaxed than &[u8]/Vec<u8>.
+Path and PathBuf are simple wrappers dedicated for storing filesystem paths.
+CStr and CString store an arbitrary sequence of bytes with a NULL terminator at the end, for interop with C. Again CStr is borrowed and CString is owned.
+Lastly, &u8 is a just single byte - not a string, so I'm not sure why it's on this list.
+You forgot Cow<str> and Box<str>
+&'a dyn ToString
+URL is outside of the stdlib, but worth to mention

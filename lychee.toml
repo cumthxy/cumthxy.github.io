@@ -1,0 +1,19 @@
+exclude = [ 
+    # Exclude zola's `@/` relative links
+    '@/',
+
+    # Some images that get included directly in the markdown
+    # and don't use the `figure` shortcode
+    'content/2020/perf/avif_supported.avif',
+    'content/2020/perf/avif_not_supported.jpg',
+]
+exclude_mail = true
+exclude_loopback = true
+exclude_private = true
+exclude_path = ["templates"]
+
+max_retries = 0
+
+# I got lots of Github links...
+accept = [429, 200]
+
