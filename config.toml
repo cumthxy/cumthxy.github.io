@@ -1,5 +1,5 @@
 # The URL the site will be built for
-base_url = "https://endler.dev"
+base_url = "https://cumthxy.github.io"
 
 title = "Matthias Endler"
 description = "Consultant at corrode.dev. Likes just-in-time compilers and hot chocolate"
