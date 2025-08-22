@@ -78,7 +78,7 @@ jobs:
         uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
-          accountId: 1c71f27d6fa097a1576b4ffab9186fa8
+          accountId: 1dc3bb0b916d4883c7cb2d356850a312
           projectName: endler-dev
           directory: ./public
       
